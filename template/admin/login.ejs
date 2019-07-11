@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="/layui-v2.4.5/layui/css/layui.css">
+    <style>
+        .login-wrapper {
+            height: 180px;
+            width: 400px;
+            padding-top: 46px;
+            padding-right: 30px;
+            border: 1px solid #666;
+            border-radius: 8px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-left: -200px;
+            margin-top: -90px;
+        }
+        /* .err-show {
+            position: absolute;
+            width: 100%;
+            top: 10px;
+            text-align: center;
+            color: #f45;
+        }
+        .err-none {
+            display: none;
+        } */
+        /* .login-form {
+            height: 180px;
+            width: 400px;
+        } */
+    </style>
+</head>
+
+<body>
+    <div class="login-wrapper">
+        <!-- <p class="err-show">fdasdfasd</p> -->
+        <form id="login-form" class="layui-form login-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">输入框</label>
+                <div class="layui-input-block">
+                    <input type="text" name="user" required lay-verify="required" placeholder="请输入标题"
+                        autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">密码框</label>
+                <div class="layui-input-block">
+                    <input type="password" name="password" required lay-verify="required" placeholder="请输入密码"
+                        autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button id="login-btn" class="layui-btn" lay-filter="formDemo">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+    <script src="/layui-v2.4.5/layui/layui.js"></script>
+    <script src="https://cdn.bootcss.com/layer/2.3/layer.js"></script>
+    <script>
+        //Demo
+        // layui.use('form', function () {
+            // var form = layui.form;
+            // form.on('submit(formDemo)', function (data) {
+            //     layer.msg(JSON.stringify(data.field));
+            //     return false;
+            // });
+        // });
+        $(document).ready(() => {
+            
+            $('#login-btn').on('click', async (e) => {
+            e.preventDefault();
+            let user = $('input').eq(0).val();
+            let pass = $('input').eq(1).val();
+
+            if (!user) {
+                layer.msg('user is required');
+                return;
+            }
+            if (user.length > 8) {
+                layer.msg('用户名的长度不能大于8');
+                return;
+            }
+            if (!pass) {
+                layer.msg('password is required');
+                return;
+            }
+            // if (!password) {
+            //     layer.msg('password is required');
+            //     return;
+            // }
+            let data = await fetch('/admin/login', {
+                method: 'post',
+                body: new FormData($('#login-form')[0])
+            })
+            let res = await data.json();
+            if (!res.status) {
+                layer.msg(res.data, {icon: 2});
+                return;
+            }
+            layer.msg(res.data, {icon: 1});
+            setTimeout(() => {
+                window.location.href = '/admin/banner'
+            }, 300)
+        });
+        });
+    </script>
+</body>
+
+</html>

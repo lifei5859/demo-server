@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title><%=title%></title>
+    <link rel="stylesheet" href="/layui-v2.4.5/layui/css/layui.css">
+    <style>
+      .min{
+        min-width: 1120px;
+      }
+      /* .min .pading-20{
+        padding: 9px 30px;
+      } */
+    </style>
+</head>
+<body>
+    <div class="layui-tab">
+        <ul class="layui-tab-title">
+          <%for(let ele in page_types){%>
+            <li <%if(ele==page_type){%>class="layui-this"<%}%>><a href="/admin/<%=ele%>"> <%=page_types[ele]%> </a></li>
+          <%}%>
+        </ul>
+      
+      </div>
+     
+    <button id="add_btn" type="button" class="layui-btn layui-btn-radius"><i class="layui-icon">&#xe608;</i> 添加</button>
+
+    <table class="layui-table min">
+        <colgroup>
+          <col width="150">
+          <col width="200">
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <%tableConf.forEach(item=>{%>
+              <th><%=item.title%></th>
+            <%})%>
+            <th>操作</th>
+          </tr> 
+        </thead>
+        <tbody>
+          <%data.forEach(item=>{%>
+            <tr class="row">
+              <td><%=item.id%></td>
+              <%tableConf.forEach(conf=>{%>
+                <td><%=item[conf.name]%></td>
+              <%})%>
+              <!-- <td><%=item.title%></td>
+              <td><%=item.img_src%></td>
+              <td><%=item.src%></td>
+              <td><%=item.serial_num%></td> -->
+              <td style="text-align: center">
+                <button data-id="<%=item.id%>" style="display: inline-block" class="layui-btn layui-btn-radius update">修改</button>
+                <button data-id="<%=item.id%>" style="display: inline-block" class="layui-btn layui-btn-radius layui-btn-danger remove">删除</button>
+              </td>
+            </tr>
+          <%})%>
+        </tbody>
+      </table>
+      
+      <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+    <script src="/layui-v2.4.5/layui/layui.js"></script>
+    <script src="https://cdn.bootcss.com/layer/2.3/layer.js"></script>
+    <script src="/js/moment.js"></script>
+<script>
+      layui.use('element', function(){
+        var element = layui.element;
+      });
+      
+      // console.log(JSON.stringify(['<%tableConf.forEach%>']))
+      $(document).ready(() => {
+        let tempForm =  `<form class="layui-form" action="" id="form" enctype="multipart/form-data">
+                        <%tableConf.forEach((item) => {
+                          if (!item.isWrite){%>
+                            <div class="layui-form-item">
+                              <label class="layui-form-label"><%=item.title%></label>
+                             <%if(item.type == "textarea"){%>
+                              <div class="layui-input-block">
+                                <textarea name="<%=item.name%>" lay-verify="required" autocomplete="off" class="layui-textarea" ></textarea>
+                              </div>
+                              <%}else if(item.type=='select'){%>
+                                  <div class="layui-input-block">
+                                    <select name="<%=item.name%>" lay-verify="required">
+                                      <option value=""></option>
+                                      <%item.vals.forEach((val)=>{%>
+                                        <option value="<%=val.ID%>"><%=val.title%></option>
+                                        <%})%>
+                                    </select>
+                                  </div>
+                                <%}else{%>
+                              <div class="layui-input-block">
+                                  <input type="<%=item.type%>" name="<%=item.name%>" lay-verify="required" autocomplete="off" class="layui-input">
+                              </div>
+                              <%}%>
+                            </div>
+                        <%}else{%>
+                          <div class="layui-form-item"  style="display:none" >
+                              <label class="layui-form-label"><%=item.title%></label>
+                              <div class="layui-input-block">
+                                  <%if(item.type=='date'){%>
+                                    <input type="<%=item.type%>" value="${moment().format('YYYY-MM-DD')}"  name="<%=item.name%>" lay-verify="required" autocomplete="off" class="layui-input">
+                                    <%}else{%>
+                                      <input type="<%=item.type%>" value="0"  name="<%=item.name%>" lay-verify="required" autocomplete="off" class="layui-input">
+                                      <%}%>
+                              </div>
+                            </div>
+                        <%}
+                      })%>
+                      </form>`
+        $('#add_btn').on('click', () => {
+          layui.use('form', function(){
+            var form = layui.form;
+          });
+          layer.open({
+            content: tempForm,
+            title: 'banner管理',
+            area: ['60%'],
+            yes: async function () {
+              let form = new FormData($('#form')[0]);
+              let data = await fetch('/admin/<%=page_type%>/list', {
+                method: 'post',
+                body: form
+              })
+              let res = await data.json();
+              layer.msg(res.data);
+              setTimeout(() => {
+                window.location.reload();
+              }, 800);
+            }
+          })
+        });
+        $('.remove').on('click', async (e) => {
+          let id = e.target.dataset.id;
+          layer.msg('你确定要删除吗？', {
+            time: 0,
+            icon: 7,
+            btn: ['确定', '取消'],
+            yes: async function(index){
+              layer.close(index);
+              let data = await fetch(`/admin/<%=page_type%>/delete/${id}`, {
+                method: 'get',
+              })
+              let res = await data.json();
+              if (!res.status) {
+                layer.msg(res.data, {icon: 2});
+                return;
+              }
+              layer.msg(res.data, {icon: 1});
+              setTimeout(() => {
+                window.location.reload();
+              }, 300)
+            }
+          });
+        });
+        $('.update').on('click', async (e) => {
+          let id = e.target.dataset.id;
+          let data = await fetch(`/admin/<%=page_type%>/getList/${id}`, {
+            method: 'get'
+          });
+          let res = await data.json();
+          if (!res.status) {
+            layer.msg(res.data);
+            return;
+          }
+          let temp = res.data
+          content = `<form class="layui-form" action="" id="form" enctype="multipart/form-data">
+                        <%tableConf.forEach((item) => {
+                          if(!item.isWrite){%>
+                            <div class="layui-form-item">
+                              <label class="layui-form-label"><%=item.title%></label>
+                              <div class="layui-input-block">
+                                <%if(item.type == "textarea"){%>
+                                <div class="layui-input-block">
+                                  <textarea name="<%=item.name%>"  value=${temp['<%=item.name%>']} lay-verify="required" autocomplete="off" class="layui-textarea" ></textarea>
+                                </div>
+                              <%}else{%>
+                                <div class="layui-input-block">
+                                  <input type="<%=item.type%>" value=${temp['<%=item.name%>']} name="<%=item.name%>" lay-verify="required" autocomplete="off" class="layui-input">
+                                </div>
+                              <%}%>
+                              </div>
+                            </div>
+                        <%}else{%>
+                          <div class="layui-form-item">
+                              <label class="layui-form-label"><%=item.title%></label>
+                              <div class="layui-input-block">
+                                  <input type="<%=item.type%>" value="0" disabled name="<%=item.name%>" lay-verify="required" autocomplete="off" class="layui-input">
+                              </div>
+                            </div>
+                            <%}
+                          })%>
+                      </form>`
+          layer.open({
+            content,
+            title: 'banner管理',
+            area: ['60%'],
+            yes: async function () {
+              let form = new FormData($('#form')[0]);
+              let data = await fetch(`/admin/<%=page_type%>/update/${id}`, {
+                method: 'post',
+                body: form
+              });
+              let res = await data.json();
+              if (!res.status) {
+                layer.msg(res.data, {icon: 2});
+                return;
+              }
+              layer.msg(res.data);
+              setTimeout(() => {
+                window.location.reload();
+              }, 300);
+            }
+          })
+          console.log(id);
+        });
+      });
+</script>
+</body>
+</html>
