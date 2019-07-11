@@ -2,7 +2,7 @@ const path=require('path');
 
 module.exports = {
     //database
-    DB_HOST: '127.0.0.1',
+    DB_HOST: '192.168.1.4',
     DB_PORT: 3306,
     DB_USE: 'root',
     DB_PASS: 'lifei5858',
